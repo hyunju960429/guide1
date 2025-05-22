@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cafe24 스마트 배너 편집 가이드</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+        
+        :root {
+            --background: #f8fafc;
+            --foreground: #1e293b;
+            --card: #ffffff;
+            --card-foreground: #1e293b;
+            --primary: #3b82f6;
+            --primary-foreground: #ffffff;
+            --secondary: #f1f5f9;
+            --secondary-foreground: #1e293b;
+            --accent: #f5f5f5;
+            --accent-foreground: #1e293b;
+            --destructive: #ef4444;
+            --destructive-foreground: #ffffff;
+            --ring: #3b82f6;
+            --radius: 0.5rem;
+            --font-sans: 'Noto Sans KR', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: var(--background);
+            color: var(--foreground);
+            font-size: 16px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 100%;
+            padding: 0;
+            margin: 0;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--foreground);
+            padding: 2rem 0;
+            margin-bottom: 0;
+            font-weight: 700;
+            font-size: 2.2rem;
+            background-color: var(--card);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .slides-container {
+            position: relative;
+            width: 100%;
+            height: calc(100vh - 90px);
+            overflow: hidden;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 2rem;
+            background-color: var(--card);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            opacity: 0;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            transform: translateX(100%);
+            overflow-y: auto;
+        }
+
+        .slide.active {
+            opacity: 1;
+            transform: translateX(0);
+            z-index: 1;
+        }
+
+        .slide h2 {
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+            color: var(--foreground);
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 0.5rem;
+            display: inline-block;
+        }
+
+        .slide-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .step-description {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            line-height: 1.6;
+        }
+
+        .slide-image-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .slide-image {
+            max-width: 90%;
+            height: auto;
+            border-radius: var(--radius);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 2px solid var(--accent);
+        }
+
+        .slide-image:hover {
+            transform: scale(1.01);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        .image-caption {
+            text-align: center;
+            font-size: 1rem;
+            color: #64748b;
+            margin-top: 0.8rem;
+        }
+
+        /* 이미지 모달 스타일 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            z-index: 999;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-content {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+            border-radius: var(--radius);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background-color 0.3s ease;
+        }
+
+        .modal-close:hover {
+            background-color: rgba(0, 0, 0, 0.8);
+        }
+
+        .step-content ul {
+            list-style-type: none;
+            padding-left: 1rem;
+        }
+
+        .step-content li {
+            margin-bottom: 1rem;
+            position: relative;
+            padding-left: 2rem;
+            font-size: 1.1rem;
+        }
+
+        .step-content li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--primary);
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .highlight {
+            background-color: var(--accent);
+            padding: 0.3rem 0.6rem;
+            border-radius: var(--radius);
+            font-weight: 500;
+            color: var(--primary);
+            display: inline-block;
+        }
+
+        .tip {
+            background-color: #dbeafe;
+            color: #1e40af;
+            padding: 1rem 1.5rem;
+            border-radius: var(--radius);
+            margin: 1.5rem 0;
+            border-left: 5px solid #3b82f6;
+            font-size: 1.1rem;
+        }
+
+        .warning {
+            background-color: #fff3cd;
+            color: #7c2d12;
+            padding: 1rem 1.5rem;
+            border-radius: var(--radius);
+            margin: 1.5rem 0;
+            border-left: 5px solid #f59e0b;
+            font-size: 1.1rem;
+        }
+
+        /* 네비게이션 버튼 */
+        .nav-buttons {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            display: flex;
+            gap: 1rem;
+            z-index: 10;
+        }
+
+        .nav-button {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            color: var(--primary-foreground);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+            transition: transform 0.2s ease, background-color 0.2s ease;
+        }
+
+        .nav-button:hover {
+            background-color: #2563eb;
+            transform: translateY(-2px);
+        }
+
+        .nav-button:active {
+            transform: translateY(0);
+        }
+
+        .nav-button:disabled {
+            background-color: #94a3b8;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* 진행 상태 표시 */
+        .progress-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background-color: #e2e8f0;
+            z-index: 10;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background-color: var(--primary);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        /* 반응형 스타일 */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8rem;
+                padding: 1.5rem 0;
+            }
+            
+            .slide h2 {
+                font-size: 1.5rem;
+            }
+            
+            .step-description {
+                font-size: 1rem;
+            }
+            
+            .step-content li {
+                font-size: 1rem;
+                padding-left: 1.5rem;
+            }
+            
+            .slide-image {
+                max-width: 100%;
+            }
+            
+            .nav-button {
+                width: 40px;
+                height: 40px;
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Cafe24 스마트 배너 편집 가이드</h1>
+    
+    <div class="progress-container">
+        <div class="progress-bar"></div>
+    </div>
+    
+    <div class="slides-container">
+        <!-- 슬라이드 1: 스마트 배너 편집 화면 접근 -->
+        <div class="slide" id="slide-1">
+            <div class="slide-content">
+                <h2>단계 1: 스마트 배너 편집 화면 접근</h2>
+                <p class="step-description">Cafe24 관리자 페이지에서 메인 배너(스마트 배너)를 수정하는 첫 단계입니다.</p>
+                
+                <div class="step-content">
+                    <ul>
+                        <li>Cafe24 관리자 페이지에 로그인 후, <span class="highlight">디자인 편집</span> 메뉴로 이동합니다.</li>
+                        <li>화면 좌측 메뉴에서 <span class="highlight">스마트 배너</span> 항목을 클릭합니다.</li>
+                        <li>현재 등록된 배너 목록을 확인할 수 있습니다.</li>
+                    </ul>
+                </div>
+                
+                <div class="slide-image-container">
+                    <img src="1 스마트배너 클릭 시.png" alt="스마트배너 클릭 화면" class="slide-image">
+                    <div class="image-caption">이미지 1: 스마트 배너 메뉴 클릭 화면</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 슬라이드 2: 배너 이미지 업로드 -->
+        <div class="slide" id="slide-2">
+            <div class="slide-content">
+                <h2>단계 2: 배너 이미지 업로드</h2>
+                <p class="step-description">PC용 및 모바일용 배너 이미지를 각각 업로드합니다.</p>
+                
+                <div class="step-content">
+                    <ul>
+                        <li>배너 편집 화면에서 <span class="highlight">PC 이미지 등록</span> 영역을 찾습니다.</li>
+                        <li>기존 이미지가 있다면 삭제하고 새 이미지를 업로드합니다.</li>
+                        <li>같은 방식으로 <span class="highlight">모바일 이미지</span>도 업로드합니다.</li>
+                        <li>이미지는 적정 사이즈로 준비하여 업로드해야 합니다 (PC 이미지: 권장 1920px 너비, 모바일 이미지: 권장 640~720px 너비).</li>
+                    </ul>
+                    
+                    <div class="tip">
+                        <strong>팁:</strong> 이미지 업로드 시 미리보기를 통해 적절한 크기와 비율인지 확인하세요.
+                    </div>
+                </div>
+                
+                <div class="slide-image-container">
+                    <img src="2 스마트배너 PC,MO 이미지업로드한 모습.png" alt="PC, 모바일 이미지 업로드 화면" class="slide-image">
+                    <div class="image-caption">이미지 2: PC 및 모바일 이미지 업로드 화면</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 슬라이드 3: 배너 링크 적용하기 -->
+        <div class="slide" id="slide-3">
+            <div class="slide-content">
+                <h2>단계 3: 배너 링크 적용하기</h2>
+                <p class="step-description">배너 이미지에 링크를 설정하여 클릭 시 특정 페이지로 이동하도록 합니다.</p>
+                
+                <div class="step-content">
+                    <ul>
+                        <li>배너 편집 화면에서 <span class="highlight">링크</span> 섹션으로 이동합니다.</li>
+                        <li><span class="highlight">사용 여부</span>를 "사용"으로 설정합니다.</li>
+                        <li>링크 입력란 옆의 <span class="highlight">편집</span> 버튼을 클릭합니다.</li>
+                    </ul>
+                </div>
+                
+                <div class="slide-image-container">
+                    <img src="3 배너 링크 적용(1).png" alt="배너 링크 적용 화면 1" class="slide-image">
+                    <div class="image-caption">이미지 3: 배너 링크 적용 - 링크 편집 버튼 클릭</div>
+                </div>
+                
+                <div class="step-content">
+                    <ul>
+                        <li>링크 팝업에서 원하는 <span class="highlight">링크 유형</span>을 선택합니다.</li>
+                        <li>카테고리, 상품, 게시판, 기획전 등 다양한 링크 옵션 중 선택할 수 있습니다.</li>
+                    </ul>
+                </div>
+                
+                <div class="slide-image-container">
+                    <img src="4 배너 링크 적용(2).png" alt="배너 링크 적용 화면 2" class="slide-image">
+                    <div class="image-caption">이미지 4: 배너 링크 적용 - 링크 유형 선택</div>
+                </div>
+                
+                <div class="step-content">
+                    <ul>
+                        <li><span class="highlight">창 열림 방식</span>을 "현재창에서 이동" 또는 "새창 열기" 중 선택합니다.</li>
+                        <li>설정이 완료되면 <span class="highlight">적용</span> 버튼을 클릭합니다.</li>
+                    </ul>
+                </div>
+                
+                <div class="slide-image-container">
+                    <img src="5 배너 링크 적용(3).png" alt="배너 링크 적용 화면 3" class="slide-image">
+                    <div class="image-caption">이미지 5: 배너 링크 적용 - 창 열림 방식 설정 및 적용</div>
+                </div>
+                
+                <div class="step-content">
+                    <ul>
+                        <li>모든 설정이 완료되면 배너 편집 화면 하단의 <span class="highlight">저장</span> 버튼을 클릭합니다.</li>
+                    </ul>
+                </div>
+                
+                <div class="slide-image-container">
+                    <img src="6 적용완.png" alt="배너 설정 저장 완료 화면" class="slide-image">
+                    <div class="image-caption">이미지 6: 배너 설정 저장 완료 화면</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 슬라이드 4: 추가 배너 등록 -->
+        <div class="slide" id="slide-4">
+            <div class="slide-content">
+                <h2>단계 4: 4개 이상의 추가 배너 등록</h2>
+                <p class="step-description">4개 이상의 배너를 등록해야 할 경우의 안내입니다.</p>
+                
+                <div class="step-content">
+                    <ul>
+                        <li>새로운 배너를 추가하려면 배너 목록 화면에서 <span class="highlight">배너 등록</span> 버튼을 클릭합니다.</li>
+                        <li>앞서 설명한 방법과 동일하게 이미지 업로드 및 링크 설정을 진행합니다.</li>
+                    </ul>
+                </div>
+                
+                <div class="slide-image-container">
+                    <img src="7 배너 3개 초과 등록 필요 시.png" alt="배너 3개 초과 등록 화면" class="slide-image">
+                    <div class="image-caption">이미지 7: 배너 3개 초과 등록 화면</div>
+                </div>
+                
+                
+            </div>
+        </div>
+        
+        <!-- 슬라이드 5: 배너 순서 편집 -->
+        <div class="slide" id="slide-5">
+            <div class="slide-content">
+                <h2>단계 5: 배너 순서 편집</h2>
+                <p class="step-description">등록된 배너의 노출 순서를 변경하는 방법입니다.</p>
+                
+                <div class="step-content">
+                    <ul>
+                        <li>배너 목록 화면에서 각 배너의 순서를 확인할 수 있습니다.</li>
+                        <li>배너 순서를 변경하려면 <span class="highlight">배너 순서 편집</span> 기능을 사용합니다.</li>
+                        <li>배너를 드래그하여 원하는 순서로 변경할 수 있습니다.</li>
+                    </ul>
+                </div>
+                
+                <div class="slide-image-container">
+                    <img src="9 배너순서편집(1).png" alt="배너 순서 편집 화면 1" class="slide-image">
+                    <div class="image-caption">이미지 9: 배너 순서 편집 화면 (1)</div>
+                </div>
+                
+                <div class="step-content">
+                    <ul>
+                        <li>순서 변경 후 <span class="highlight">적용</span> 버튼을 클릭하여 변경사항을 적용합니다.</li>
+                        <li>순서가 변경된 배너는 쇼핑몰 메인 페이지에 변경된 순서대로 노출됩니다.</li>
+                    </ul>
+                </div>
+                
+                <div class="slide-image-container">
+                    <img src="9 배너순서편집(2).png" alt="배너 순서 편집 화면 2" class="slide-image">
+                    <div class="image-caption">이미지 10: 배너 순서 편집 화면 (2)</div>
+                </div>
+                
+                <div class="tip">
+                    <strong>팁:</strong> 중요한 배너는 첫 번째 또는 두 번째 위치에 배치하는 것이 방문자의 주목도를 높일 수 있습니다.
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 네비게이션 버튼 -->
+    <div class="nav-buttons">
+        <button class="nav-button" id="prev-btn">←</button>
+        <button class="nav-button" id="next-btn">→</button>
+    </div>
+    
+    <!-- 이미지 모달 -->
+    <div class="modal" id="image-modal">
+        <span class="modal-close" id="modal-close">×</span>
+        <img class="modal-content" id="modal-image">
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 변수 초기화
+            const slides = document.querySelectorAll('.slide');
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const progressBar = document.querySelector('.progress-bar');
+            const modal = document.getElementById('image-modal');
+            const modalImg = document.getElementById('modal-image');
+            const modalClose = document.getElementById('modal-close');
+            let currentSlide = 0;
+
+            // 이미지 클릭 이벤트 - 모달 표시
+            const images = document.querySelectorAll('.slide-image');
+            images.forEach(img => {
+                img.addEventListener('click', function() {
+                    modal.style.display = 'flex';
+                    modalImg.src = this.src;
+                });
+            });
+
+            // 모달 닫기
+            modalClose.addEventListener('click', function() {
+                modal.style.display = 'none';
+            });
+
+            // 모달 배경 클릭시 닫기
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+
+            // 첫 번째 슬라이드 활성화
+            function initSlides() {
+                slides[0].classList.add('active');
+                updateNavButtons();
+                updateProgressBar();
+            }
+
+            // 슬라이드 이동 함수
+            function goToSlide(index) {
+                // 현재 슬라이드 비활성화
+                slides[currentSlide].classList.remove('active');
+                
+                // 새 슬라이드 활성화
+                currentSlide = index;
+                slides[currentSlide].classList.add('active');
+                
+                updateNavButtons();
+                updateProgressBar();
+            }
+
+            // 이전 슬라이드로 이동
+            function goToPrevSlide() {
+                if (currentSlide > 0) {
+                    goToSlide(currentSlide - 1);
+                }
+            }
+
+            // 다음 슬라이드로 이동
+            function goToNextSlide() {
+                if (currentSlide < slides.length - 1) {
+                    goToSlide(currentSlide + 1);
+                }
+            }
+
+            // 버튼 상태 업데이트
+            function updateNavButtons() {
+                prevBtn.disabled = currentSlide === 0;
+                nextBtn.disabled = currentSlide === slides.length - 1;
+            }
+
+            // 진행 상태 표시 업데이트
+            function updateProgressBar() {
+                const progress = ((currentSlide + 1) / slides.length) * 100;
+                progressBar.style.width = `${progress}%`;
+            }
+
+            // 이벤트 리스너 설정
+            prevBtn.addEventListener('click', goToPrevSlide);
+            nextBtn.addEventListener('click', goToNextSlide);
+
+            // 키보드 화살표로 슬라이드 이동
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'ArrowLeft') {
+                    goToPrevSlide();
+                } else if (e.key === 'ArrowRight') {
+                    goToNextSlide();
+                }
+            });
+
+            // 초기화
+            initSlides();
+        });
+    </script>
+</body>
+</html> 
